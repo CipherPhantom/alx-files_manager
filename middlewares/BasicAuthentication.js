@@ -14,9 +14,11 @@ async function getUserFromAuthorization(req) {
   const decodedToken = Buffer.from(authInfo[1], 'base64').toString('utf-8');
   const [email, password] = decodedToken.split(':');
 
-  const user = await (await dbClient.usersCollection())
-    .findOne({ email, password: sha1(password) });
-  return user || null;
+  const user = await (await dbClient.usersCollection()).findOne({ email });
+  if (!user || user.password !== sha1(password)) {
+    return null;
+  }
+  return user;
 }
 
 async function basicAuthentication(req, res, next) {
