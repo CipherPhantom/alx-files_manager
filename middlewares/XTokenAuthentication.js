@@ -3,7 +3,7 @@ import dbClient from '../utils/db';
 import redisClient from '../utils/redis';
 
 async function getUserFromXToken(req) {
-  const token = req.headers['X-Token'];
+  const token = req.headers['x-token'];
 
   if (!token) {
     return null;
