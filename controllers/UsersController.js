@@ -14,18 +14,23 @@ class UsersController {
       return;
     }
 
-    const db = dbClient.client.db();
-    const usersCollection = await db.collection('users');
-    const user = await usersCollection.findOne({ email });
+    const user = await (await dbClient.usersCollection()).findOne({ email });
     if (user) {
       res.status(400).json({ error: 'Already exist' });
       return;
     }
 
     const hashedPassword = sha1(password);
-    const result = await usersCollection.insertOne({ email, password: hashedPassword });
+    const result = await (await dbClient.usersCollection())
+      .insertOne({ email, password: hashedPassword });
 
     res.status(201).json({ id: result.insertedId.toString(), email });
+  }
+
+  static async getMe(req, res) {
+    const { user } = req;
+
+    res.json({ email: user.email, id: user._id.toString() });
   }
 }
 

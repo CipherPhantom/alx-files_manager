@@ -20,15 +20,19 @@ class DBClient {
   }
 
   async nbUsers() {
-    const db = this.client.db();
-    const usersCollection = await db.collection('users');
-    return usersCollection.countDocuments();
+    return this.usersCollection().countDocuments();
   }
 
   async nbFiles() {
-    const db = this.client.db();
-    const filesCollection = await db.collection('files');
-    return filesCollection.countDocuments();
+    return this.filesCollection().countDocuments();
+  }
+
+  async usersCollection() {
+    return this.client.db().collection('users');
+  }
+
+  async filesCollection() {
+    return this.client.db().collection('files');
   }
 }
 
