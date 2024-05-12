@@ -1,4 +1,4 @@
-import ObjectId from 'mongodb';
+import mongoDBCore from 'mongodb/lib/core';
 import dbClient from '../utils/db';
 import redisClient from '../utils/redis';
 
@@ -15,7 +15,7 @@ async function getUserFromXToken(req) {
   }
 
   const user = await (await dbClient.usersCollection())
-    .findOne({ _id: new ObjectId(userId) });
+    .findOne({ _id: new mongoDBCore.BSON.ObjectId(userId) });
   return user || null;
 }
 
