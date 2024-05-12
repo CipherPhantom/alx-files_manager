@@ -25,7 +25,7 @@ class UsersController {
     const hashedPassword = sha1(password);
     const result = await usersCollection.insertOne({ email, password: hashedPassword });
 
-    res.json({ id: result.insertedId, email });
+    res.status(201).json({ id: result.insertedId.toString(), email });
   }
 }
 
