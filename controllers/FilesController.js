@@ -1,3 +1,4 @@
+/* eslint-disable no-param-reassign */
 import mongoDBCore from 'mongodb/lib/core';
 import createLocalFile from '../utils/files';
 import dbClient from '../utils/db';
@@ -52,6 +53,38 @@ class FilesController {
     const { _id } = dupFileObj;
     // console.log({ id: _id, ...newFileObj });
     res.status(201).json({ id: String(_id), ...newFileObj });
+  }
+
+  static async getShow(req, res) {
+    const userId = req.user._id.toString();
+    const fileId = req.params.id;
+
+    const file = await (await dbClient.filesCollection())
+      .findOne({ _id: new mongoDBCore.BSON.ObjectId(fileId), userId });
+    if (!file) {
+      res.status(404).json({ error: 'Not found' });
+      return;
+    }
+    delete file._id;
+    delete file.userId;
+    res.json({ id: fileId, userId, ...file });
+  }
+
+  static async getIndex(req, res) {
+    const parentId = req.query.parentId || 0;
+    const page = Number(req.query.page) || 0;
+
+    const files = await (await dbClient.filesCollection())
+      .aggregate([
+        { $match: { parentId: parentId || { $exists: true } } },
+        { $skip: page * 20 },
+        { $limit: 20 },
+      ]).toArray()
+      .forEach((file) => {
+        file.id = file._id.toString();
+        delete file._id;
+      });
+    res.json(files);
   }
 }
 
