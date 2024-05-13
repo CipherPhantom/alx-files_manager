@@ -4,6 +4,7 @@ import UsersController from '../controllers/UsersController';
 import AuthController from '../controllers/AuthController';
 import basicAuthentication from '../middlewares/BasicAuthentication';
 import xTokenAuthentication from '../middlewares/XTokenAuthentication';
+import FilesController from '../controllers/FilesController';
 
 const routes = Router();
 
@@ -15,5 +16,6 @@ routes.get('/users/me', xTokenAuthentication, UsersController.getMe);
 
 routes.get('/connect', basicAuthentication, AuthController.getConnect);
 routes.get('/disconnect', xTokenAuthentication, AuthController.getDisconnect);
+routes.post('/files', xTokenAuthentication, FilesController.postUpload);
 
 export default routes;
