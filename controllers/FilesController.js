@@ -1,4 +1,5 @@
 import mongoDBCore from 'mongodb/lib/core/';
+import { ObjectID } from 'mongodb';
 import { createLocalFile } from '../utils/files';
 import dbClient from '../utils/db';
 // import ObjectId from "mongodb";
@@ -41,9 +42,9 @@ class FilesController {
     newFileObj = {
       name,
       type,
-      parentId: parentId || '0',
+      parentId: (parentId && new mongoDBCore.BSON.ObjectId(parentId)) || '0',
       isPublic: isPublic || false,
-      userId,
+      userId: new mongoDBCore.BSON.ObjectId(userId),
     };
     if (type !== 'folder') {
       const filePath = await createLocalFile(data);
@@ -64,7 +65,10 @@ class FilesController {
     const fileId = req.params.id;
 
     const file = await (await dbClient.filesCollection())
-      .findOne({ _id: new mongoDBCore.BSON.ObjectId(fileId), userId });
+      .findOne({
+        _id: new mongoDBCore.BSON.ObjectId(fileId),
+        userId: new mongoDBCore.BSON.ObjectId(userId),
+      });
     if (!file) {
       res.status(404).json({ error: 'Not found' });
       return;
@@ -80,7 +84,12 @@ class FilesController {
 
     const files = await (await (await dbClient.filesCollection())
       .aggregate([
-        { $match: { parentId: parentId || { $exists: true } } },
+        {
+          $match: {
+            parentId: (parentId && ObjectID(parentId))
+          || { $exists: true },
+          },
+        },
         { $skip: page * 20 },
         { $limit: 20 },
       ]).toArray());
