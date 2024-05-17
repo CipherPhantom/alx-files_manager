@@ -19,4 +19,4 @@ async function createLocalFile(b64Data) {
   }
 }
 
-export default createLocalFile;
+export { createLocalFile, fileExists };

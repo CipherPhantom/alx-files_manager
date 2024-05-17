@@ -41,7 +41,7 @@ class FilesController {
     newFileObj = {
       name,
       type,
-      parentId: parentId || 0,
+      parentId: parentId || '0',
       isPublic: isPublic || false,
       userId,
     };
@@ -75,23 +75,23 @@ class FilesController {
   }
 
   static async getIndex(req, res) {
-    const parentId = req.query.parentId || 0;
+    const parentId = req.query.parentId || undefined;
     const page = Number(req.query.page) || 0;
 
     const files = await (await (await dbClient.filesCollection())
       .aggregate([
-        { $match: { parentId } },
+        { $match: { parentId: parentId || { $exists: true } } },
         { $skip: page * 20 },
         { $limit: 20 },
       ]).toArray());
 
-    /* eslint-disable no-param-reassign */
     files.forEach((file) => {
-      file.id = file._id.toString();
-      delete file._id;
-      delete file.localPath;
+      const fileDup = file;
+      fileDup.id = fileDup._id.toString();
+      delete fileDup._id;
+      delete fileDup.localPath;
     });
-    res.json(Array.from(files));
+    res.json(files);
   }
 }
 
