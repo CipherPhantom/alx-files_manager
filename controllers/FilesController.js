@@ -1,7 +1,7 @@
-/* eslint-disable no-param-reassign */
-import mongoDBCore from 'mongodb/lib/core';
-import createLocalFile from '../utils/files';
+import mongoDBCore from 'mongodb/lib/core/';
+import { createLocalFile } from '../utils/files';
 import dbClient from '../utils/db';
+// import ObjectId from "mongodb";
 
 class FilesController {
   static async postUpload(req, res) {
@@ -24,8 +24,11 @@ class FilesController {
       return;
     }
     if (parentId) {
-      const parent = await (await dbClient.filesCollection())
-        .findOne({ _id: new mongoDBCore.BSON.ObjectId(parentId) });
+      // if (ObjectId.isValid(parentId))
+      const parent = await (
+        await dbClient.filesCollection()
+      ).findOne({ _id: new mongoDBCore.BSON.ObjectId(parentId) });
+
       if (!parent) {
         res.status(400).json({ error: 'Parent not found' });
         return;
@@ -48,10 +51,11 @@ class FilesController {
         newFileObj.localPath = filePath;
       } else throw Error(`Could not create file ${name}`);
     }
-    const dupFileObj = { ...newFileObj };
-    await (await dbClient.filesCollection()).insertOne(dupFileObj);
-    const { _id } = dupFileObj;
-    // console.log({ id: _id, ...newFileObj });
+    await (await dbClient.filesCollection()).insertOne(newFileObj);
+    const { _id } = newFileObj;
+    delete newFileObj.localPath;
+    delete newFileObj._id;
+
     res.status(201).json({ id: String(_id), ...newFileObj });
   }
 
@@ -66,25 +70,28 @@ class FilesController {
       return;
     }
     delete file._id;
-    delete file.userId;
-    res.json({ id: fileId, userId, ...file });
+    delete file.localPath;
+    res.json({ id: fileId, ...file });
   }
 
   static async getIndex(req, res) {
     const parentId = req.query.parentId || 0;
     const page = Number(req.query.page) || 0;
 
-    const files = await (await dbClient.filesCollection())
+    const files = await (await (await dbClient.filesCollection())
       .aggregate([
-        { $match: { parentId: parentId || { $exists: true } } },
+        { $match: { parentId } },
         { $skip: page * 20 },
         { $limit: 20 },
-      ]).toArray()
-      .forEach((file) => {
-        file.id = file._id.toString();
-        delete file._id;
-      });
-    res.json(files);
+      ]).toArray());
+
+    /* eslint-disable no-param-reassign */
+    files.forEach((file) => {
+      file.id = file._id.toString();
+      delete file._id;
+      delete file.localPath;
+    });
+    res.json(Array.from(files));
   }
 }
 
