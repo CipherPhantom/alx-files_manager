@@ -1,6 +1,6 @@
-import mongoDBCore from 'mongodb/lib/core/index.js';
-import dbClient from '../utils/db.js';
-import redisClient from '../utils/redis.js';
+import mongoDBCore from 'mongodb/lib/core/index';
+import dbClient from '../utils/db';
+import redisClient from '../utils/redis';
 
 async function getUserFromXToken(req) {
   const token = req.headers['x-token'];
