@@ -35,15 +35,17 @@ async function publishHelper(req, res, bool) {
     { $set: { isPublic: bool } },
     { returnDocument: 'after' },
   );
-  if (!updateResp.ok) {
+  if (!updateResp.value) {
     res.status(404).json({ error: 'Not found' });
     return;
   }
-  updateResp.value.id = String(updateResp.value._id);
-  delete updateResp.value._id;
-  delete updateResp.value.localPath;
+  else {
+    updateResp.value.id = String(updateResp.value._id);
+    delete updateResp.value._id;
+    delete updateResp.value.localPath;
 
-  res.status(200).json(updateResp.value);
+    res.status(200).json(updateResp.value);
+  }
 }
 
 export { createLocalFile, fileExists, publishHelper };
