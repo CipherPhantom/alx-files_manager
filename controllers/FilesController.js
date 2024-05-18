@@ -1,8 +1,8 @@
-import mongoDBCore from 'mongodb/lib/core/';
+// import mongoDBCore from "mongodb/lib/core/index.js";
 import { ObjectID } from 'mongodb';
-import { createLocalFile } from '../utils/files';
 import dbClient from '../utils/db';
-// import ObjectId from "mongodb";
+import { publishHelper, createLocalFile } from '../utils/files';
+// import ObjectID from "mongodb";
 
 class FilesController {
   static async postUpload(req, res) {
@@ -11,6 +11,7 @@ class FilesController {
     } = req.body;
     const userId = req.user._id.toString();
     let newFileObj = {};
+    let parent;
 
     if (!name) {
       res.status(400).json({ error: 'Missing name' });
@@ -25,11 +26,13 @@ class FilesController {
       return;
     }
     if (parentId) {
-      // if (ObjectId.isValid(parentId))
-      const parent = await (
-        await dbClient.filesCollection()
-      ).findOne({ _id: new mongoDBCore.BSON.ObjectId(parentId) });
-
+      if (ObjectID.isValid(parentId)) {
+        parent = await (
+          await dbClient.filesCollection()
+        ).findOne({ _id: ObjectID(parentId) });
+      } else {
+        parent = null;
+      }
       if (!parent) {
         res.status(400).json({ error: 'Parent not found' });
         return;
@@ -42,9 +45,9 @@ class FilesController {
     newFileObj = {
       name,
       type,
-      parentId: (parentId && new mongoDBCore.BSON.ObjectId(parentId)) || '0',
+      parentId: (parentId && ObjectID(parentId)) || '0',
       isPublic: isPublic || false,
-      userId: new mongoDBCore.BSON.ObjectId(userId),
+      userId: ObjectID(userId),
     };
     if (type !== 'folder') {
       const filePath = await createLocalFile(data);
@@ -64,11 +67,12 @@ class FilesController {
     const userId = req.user._id.toString();
     const fileId = req.params.id;
 
-    const file = await (await dbClient.filesCollection())
-      .findOne({
-        _id: new mongoDBCore.BSON.ObjectId(fileId),
-        userId: new mongoDBCore.BSON.ObjectId(userId),
-      });
+    const file = await (
+      await dbClient.filesCollection()
+    ).findOne({
+      _id: ObjectID(fileId),
+      userId: ObjectID(userId),
+    });
     if (!file) {
       res.status(404).json({ error: 'Not found' });
       return;
@@ -82,17 +86,19 @@ class FilesController {
     const parentId = req.query.parentId || undefined;
     const page = Number(req.query.page) || 0;
 
-    const files = await (await (await dbClient.filesCollection())
+    const files = await await (
+      await dbClient.filesCollection()
+    )
       .aggregate([
         {
           $match: {
-            parentId: (parentId && ObjectID(parentId))
-          || { $exists: true },
+            parentId: (parentId && ObjectID(parentId)) || { $exists: true },
           },
         },
         { $skip: page * 20 },
         { $limit: 20 },
-      ]).toArray());
+      ])
+      .toArray();
 
     files.forEach((file) => {
       const fileDup = file;
@@ -101,6 +107,14 @@ class FilesController {
       delete fileDup.localPath;
     });
     res.json(files);
+  }
+
+  static async putPublish(req, res) {
+    publishHelper(req, res, true);
+  }
+
+  static async putUnPublish(req, res) {
+    publishHelper(req, res, false);
   }
 }
 

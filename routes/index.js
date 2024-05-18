@@ -19,5 +19,7 @@ routes.get('/disconnect', xTokenAuthentication, AuthController.getDisconnect);
 routes.post('/files', xTokenAuthentication, FilesController.postUpload);
 routes.get('/files', xTokenAuthentication, FilesController.getIndex);
 routes.get('/files/:id', xTokenAuthentication, FilesController.getShow);
+routes.put('/files/:id/publish', xTokenAuthentication, FilesController.putPublish);
+routes.put('/files/:id/unpublish', xTokenAuthentication, FilesController.putUnPublish);
 
 export default routes;
