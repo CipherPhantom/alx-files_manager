@@ -24,6 +24,15 @@ async function createLocalFile(b64Data) {
   }
 }
 
+async function readLocalFile(filePath) {
+  try {
+    const fileBuffer = await fs.readFile(filePath);
+    return fileBuffer;
+  } catch (err) {
+    return null;
+  }
+}
+
 async function publishHelper(req, res, bool) {
   const userId = req.user._id.toString();
   const fileId = req.params.id;
@@ -37,9 +46,7 @@ async function publishHelper(req, res, bool) {
   );
   if (!updateResp.value) {
     res.status(404).json({ error: 'Not found' });
-    return;
-  }
-  else {
+  } else {
     updateResp.value.id = String(updateResp.value._id);
     delete updateResp.value._id;
     delete updateResp.value.localPath;
@@ -48,4 +55,6 @@ async function publishHelper(req, res, bool) {
   }
 }
 
-export { createLocalFile, fileExists, publishHelper };
+export {
+  createLocalFile, fileExists, publishHelper, readLocalFile,
+};

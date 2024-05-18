@@ -3,8 +3,11 @@ import AppController from '../controllers/AppController';
 import UsersController from '../controllers/UsersController';
 import AuthController from '../controllers/AuthController';
 import basicAuthentication from '../middlewares/BasicAuthentication';
-import xTokenAuthentication from '../middlewares/XTokenAuthentication';
-import FilesController from '../controllers/FilesController';
+import {
+  xTokenAuthentication,
+  xTokenAuthenticationWithNoRes,
+} from '../middlewares/XTokenAuthentication.js';
+import FilesController from '../controllers/FilesController.js';
 
 const routes = Router();
 
@@ -21,5 +24,6 @@ routes.get('/files', xTokenAuthentication, FilesController.getIndex);
 routes.get('/files/:id', xTokenAuthentication, FilesController.getShow);
 routes.put('/files/:id/publish', xTokenAuthentication, FilesController.putPublish);
 routes.put('/files/:id/unpublish', xTokenAuthentication, FilesController.putUnPublish);
+routes.get('/files/:id/data', xTokenAuthenticationWithNoRes, FilesController.getFile);
 
 export default routes;

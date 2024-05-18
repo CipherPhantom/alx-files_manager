@@ -1,6 +1,6 @@
-import mongoDBCore from 'mongodb/lib/core';
-import dbClient from '../utils/db';
-import redisClient from '../utils/redis';
+import mongoDBCore from 'mongodb/lib/core/index.js';
+import dbClient from '../utils/db.js';
+import redisClient from '../utils/redis.js';
 
 async function getUserFromXToken(req) {
   const token = req.headers['x-token'];
@@ -30,4 +30,11 @@ async function xTokenAuthentication(req, res, next) {
   next();
 }
 
-export default xTokenAuthentication;
+async function xTokenAuthenticationWithNoRes(req, res, next) {
+  const user = await getUserFromXToken(req);
+
+  req.user = user;
+  next();
+}
+
+export { xTokenAuthentication, xTokenAuthenticationWithNoRes };

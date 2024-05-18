@@ -1,7 +1,12 @@
 // import mongoDBCore from "mongodb/lib/core/index.js";
 import { ObjectID } from 'mongodb';
+import mime from 'mime-types';
 import dbClient from '../utils/db';
-import { publishHelper, createLocalFile } from '../utils/files';
+import {
+  publishHelper,
+  createLocalFile,
+  readLocalFile,
+} from '../utils/files';
 // import ObjectID from "mongodb";
 
 class FilesController {
@@ -115,6 +120,33 @@ class FilesController {
 
   static async putUnPublish(req, res) {
     publishHelper(req, res, false);
+  }
+
+  static async getFile(req, res) {
+    const userId = req.user && req.user._id.toString();
+    const fileId = req.params.id;
+
+    const file = await (
+      await dbClient.filesCollection()
+    ).findOne({
+      _id: fileId && ObjectID(fileId),
+    });
+    if (!file || (!file.isPublic && userId !== String(file.userId))) {
+      res.status(404).json({ error: 'Not found' });
+      return;
+    }
+
+    if (file.type === 'folder') {
+      res.status(400).json({ error: "A folder doesn't have content" });
+      return;
+    }
+    const fileBuffer = await readLocalFile(file.localPath);
+    if (!fileBuffer) {
+      res.status(404).json({ error: 'Not found' });
+    } else {
+      res.header('Content-Type', mime.lookup(file.name) || 'application/octet-stream');
+      res.status(200).send(fileBuffer);
+    }
   }
 }
 
